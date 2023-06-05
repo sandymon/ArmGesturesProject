@@ -1,118 +1,71 @@
-#include <Servo.h>
+#include <Servo.h>;
 
-Servo servothumb;          
-Servo servoindex;          
-Servo servomiddle;
-Servo servoring;
-Servo servopinky;
+#define numOfValsRec  6
+#define digitsPerValRec 1
+
+int valsRec[numOfValsRec];
+int stringLength = numOfValsRec * digitsPerValRec + 1;
+int counter = 0;
+bool counterStart = false;
+String receivedString;
 
 
-char number[50];
-char c;
-int state = 0;
-String myStringRec;
-int stringCounter = 0;
-bool stringCounterStart = false;
-String myRevivedString;
-int stringLength = 6;
+Servo thumbServo;
+Servo indexServo;
+Servo middleServo;
+Servo ringServo;
+Servo pinkyServo;
+Servo wristServo;
 
-int servoPinky,servoMiddle,servoIndex,servoThumb,servoRing;
-int myVals[] ={0,0,0,0,0} ;
-
-int myButton= 1;
-bool portable;
 
 void setup() {
+  // put your setup code here, to run once:
+    Serial.begin(9600);
 
-  Serial.begin(9600);
-  servothumb.attach(9);  
-  servoindex.attach(8);  
-  servopinky.attach(5);
-  servoring.attach(6);
-  servomiddle.attach(7);
-  // myButton = analogRead(A0);
-  // delay(500);
-  // if (myButton == 0){portable = false;}
-  // else {portable = true;}
-  
+    //finger Servo pinsouts
+    thumbServo.attach(9);
+    indexServo.attach(8);
+    middleServo.attach(7);
+    ringServo.attach(6);
+    pinkyServo.attach(5);
+    wristServo.attach(4);
+}
+
+void receivedData(){
+  while(Serial.available()){
+    char c = Serial.read();
+    
+    if (c=='$'){
+      counterStart = true;
+    }
+    if(counterStart){
+      if(counter < stringLength){
+        receivedString = String(receivedString+c);
+        counter++;
+      }
+      if(counter >=stringLength){
+        for(int i =0; i < numOfValsRec; i++){
+          int num = (i*digitsPerValRec)+1;
+          valsRec[i] = receivedString.substring(num, num + digitsPerValRec).toInt();
+        }
+        receivedString = "";
+        counter = 0;
+        counterStart = false;
+      }
+    }
+  }
 }
 
 void loop() {
+  // put your main code here, to run repeatedly:
+  receivedData();
 
-// myButton = analogRead(A0);
-// if (portable == true){
-//   if (myButton == 0){
-//       allOFF();}
-//   else{
-//       allON();}
-// }
-// else{
+  if(valsRec[0]==1){thumbServo.write(170);}else{thumbServo.write(0);}
+  if(valsRec[1]==1){indexServo.write(170);}else{indexServo.write(0);}
+  if(valsRec[2]==1){middleServo.write(170);}else{middleServo.write(0);}
+  if(valsRec[3]==1){ringServo.write(170);}else{ringServo.write(0);}
+  if(valsRec[4]==1){pinkyServo.write(170);}else{pinkyServo.write(0);}
+  if(valsRec[5]==1){wristServo.write(170);}else{wristServo.write(0);}
   
-receiveData();
-if (servoPinky ==1){  servopinky.write(180);}else{servopinky.write(0);}
-if (servoIndex ==1){  servoindex.write(180);}else{servoindex.write(0);}
-if (servoMiddle ==1){  servomiddle.write(180);}else{servomiddle.write(0);}
-if (servoThumb ==1){  servothumb.write(180);}else{servothumb.write(0);}
-if (servoRing ==1){  servoring.write(180);}else{servoring.write(0);}
-//}
 
-}
-
-
-void allON(){
-  
-servopinky.write(180);
-servoindex.write(180);
-servomiddle.write(180);
-servothumb.write(180);
-servoring.write(180);
-  
-  }
-
-
-void allOFF(){
-  
-servopinky.write(0);
-servoindex.write(0);
-servomiddle.write(0);
-servothumb.write(0);
-servoring.write(0);
-}
-
-
-void receiveData() {
-  int i = 0;
-  while (Serial.available()) {
-   char c = Serial.read();
-  
-    if (c == '$') {
-      stringCounterStart = true;
-    }
-    if (stringCounterStart == true )
-    {
-      if (stringCounter < stringLength)
-      {
-        myRevivedString = String(myRevivedString + c);
-        stringCounter++;
-      }
-      if (stringCounter >= stringLength) {
-        stringCounter = 0; stringCounterStart = false;
-        servoPinky = myRevivedString.substring(1, 2).toInt();
-        servoRing = myRevivedString.substring(2, 3).toInt();
-        servoMiddle = myRevivedString.substring(3, 4).toInt();
-        servoIndex = myRevivedString.substring(4, 5).toInt();
-        servoThumb = myRevivedString.substring(5, 6).toInt();
-//        Serial.print(servoPinky);
-//        Serial.print(" ");
-//        Serial.print(servoRing);
-//        Serial.print(" ");
-//        Serial.print(servoMiddle);
-//        Serial.print(" ");
-//        Serial.print(servoIndex);
-//        Serial.print(" ");
-//        Serial.println(servoThumb);       
-        myRevivedString = "";
-      }
-    }
-  }
 }
