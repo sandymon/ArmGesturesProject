@@ -25,7 +25,6 @@ while True:
         else:
             fingerList.append(0)
 
-#eddy 
         #serial.sendData(reversed(fingerList));
         serial.sendData(fingerList);
 
