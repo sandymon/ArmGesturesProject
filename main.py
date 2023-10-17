@@ -1,5 +1,5 @@
 import cvzone.HandTrackingModule as htm
-import cvzone.SerialModule
+import cvzone.SerialModule as srl
 import mediapipe as mp
 import cv2
 import time
@@ -8,7 +8,9 @@ pTime = 0
 cTime = 0
 # Initialize OpenCV and MediaPipe Hands
 cap = cv2.VideoCapture(0)
+
 detector = htm.HandDetector(detectionCon=0.7)
+serial = srl.SerialObject("COM6",9600,1)
 
 
 square_size = 225
@@ -28,7 +30,9 @@ def draw_hollow_square(image, x, y, size, color, thickness):
 
 while True:
     success, image = cap.read()
-    Hands, image = detector.findHands(image)
+    Hands, image = detector.findHands(image,draw = False)
+
+
     imageRGB = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
     draw_hollow_square(image, square_x, square_y, square_size, square_color, square_thickness)
@@ -47,7 +51,23 @@ while True:
         lmList = hand["lmList"]
         if square_x <= lmList[8][0] <= square_x + square_size and square_y <= lmList[8][1] <= square_y + square_size:
             # Draw landmarks or process the hand here
-            pass
+            Hands, image = detector.findHands(image)
+
+            #finger Data sent to arduino
+            if Hands:
+                myHand = Hands[0]
+                fingerList = detector.fingersUp(myHand)
+                lmList = myHand["lmList"]
+
+                thumbTip = lmList[4]
+                center = lmList[0]
+                if thumbTip[0] > center[0]:
+                    fingerList.append(1)
+                else:
+                    fingerList.append(0)
+
+                # serial.sendData(reversed(fingerList));
+                serial.sendData(fingerList)
 
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
