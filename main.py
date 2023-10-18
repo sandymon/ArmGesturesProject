@@ -84,6 +84,7 @@ def runCamera():
 if __name__ == '__main__':
     while True:
         # Read data from the Arduino
+        data = arduino.readline().decode().strip()
         serial.getData()
         if data == "ButtonPressed":
             runCamera()
