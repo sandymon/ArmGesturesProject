@@ -21,27 +21,53 @@ text_thickness = 1
 
 timer_duration = 15
 
+
+
 def draw_hollow_square(image, x, y, size, color, thickness):
     cv2.rectangle(image, (x, y), (x + size, y + size), color, thickness)
 
+
 def run_camera():
+    draw_hands = False
+
     start_time = time.time()
     while time.time() - start_time < timer_duration:
         success, image = cap.read()
 
-        Hands, image = detector.findHands(image, draw=False)
-        imageRGB = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        Hands, image = detector.findHands(image, draw_hands) # finding hands without drawing them on screen
 
+
+        #Drawing the limit boxes in the image
         draw_hollow_square(image, square_x, square_y, square_size, square_color, square_thickness)
         draw_hollow_square(image, square_x * 4, square_y, square_size, square_color, square_thickness)
 
+        #Drawing indicating text for hands boxes
         cv2.putText(image, "Right hand", (square_x, square_y + 220), text_font, text_size, text_color, text_thickness)
-        cv2.putText(image, "Left hand", (square_x * 4, square_y + 220), text_font, text_size, text_color, text_thickness)
+        cv2.putText(image, "Left hand", (square_x * 4, square_y + 220), text_font, text_size, text_color,
+                    text_thickness)
 
-        for hand in Hands:
-            lmList = hand["lmList"]
-            if square_x <= lmList[8][0] <= square_x + square_size and square_y <= lmList[8][1] <= square_y + square_size:
-                Hands, image = detector.findHands(image)
+        if len(Hands) == 2:  #if both hands are detected
+
+            if Hands[0]["type"] == "Right": # is first hand detected RIGHT hand
+                right_hand = Hands[0]
+                left_hand = Hands[1]
+            else: #if not make first hand detected Left
+                left_hand = Hands[0]
+                right_hand = Hands[1]
+
+            #initializing right and left hands landmarks
+            right_hand_lmList = right_hand["lmList"]
+            left_hand_lmList = left_hand["lmList"]
+
+            #if hands are inside drawn limit boxes
+            if (square_x <= right_hand_lmList[8][0] <= square_x + square_size
+                                        and square_y <= right_hand_lmList[8][1] <= square_y + square_size
+                                        and square_x * 4 <= left_hand_lmList[8][0] <= square_x * 4 + square_size
+                                        and square_y <= left_hand_lmList[8][1] <= square_y + square_size):
+
+
+                draw_hands = True #Draw Hands
+
                 if Hands:
                     myHand = Hands[0]
                     fingerList = detector.fingersUp(myHand)
@@ -54,7 +80,10 @@ def run_camera():
                     else:
                         fingerList.append(0)
 
-                    serial.sendData(fingerList)
+                    serial.sendData(fingerList) # send fingerdata to arduino
+
+            else:
+                draw_hands = False
 
         cv2.imshow("Output", image)
         cv2.waitKey(1)
