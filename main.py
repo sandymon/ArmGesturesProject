@@ -19,8 +19,7 @@ text_font = cv2.FONT_HERSHEY_SIMPLEX
 text_size = 1
 text_thickness = 1
 
-timer_duration = 15
-
+timer_duration = 30
 
 
 def draw_hollow_square(image, x, y, size, color, thickness):
@@ -34,42 +33,41 @@ def run_camera():
     while time.time() - start_time < timer_duration:
         success, image = cap.read()
 
-        Hands, image = detector.findHands(image, draw_hands) # finding hands without drawing them on screen
 
+        hands, image = detector.findHands(image, draw_hands)  # finding hands without drawing them on screen
 
-        #Drawing the limit boxes in the image
+        # Drawing the limit boxes in the image
         draw_hollow_square(image, square_x, square_y, square_size, square_color, square_thickness)
         draw_hollow_square(image, square_x * 4, square_y, square_size, square_color, square_thickness)
 
-        #Drawing indicating text for hands boxes
+        # Drawing indicating text for hands boxes
         cv2.putText(image, "Right hand", (square_x, square_y + 220), text_font, text_size, text_color, text_thickness)
         cv2.putText(image, "Left hand", (square_x * 4, square_y + 220), text_font, text_size, text_color,
                     text_thickness)
 
-        if len(Hands) == 2:  #if both hands are detected
+        if len(hands) == 2:  # if both hands are detected
 
-            if Hands[0]["type"] == "Right": # is first hand detected RIGHT hand
-                right_hand = Hands[0]
-                left_hand = Hands[1]
-            else: #if not make first hand detected Left
-                left_hand = Hands[0]
-                right_hand = Hands[1]
+            if hands[0]["type"] == "Right":  # is first hand detected RIGHT hand
+                right_hand = hands[0]
+                left_hand = hands[1]
+            else:  # if not make first hand detected Left
+                left_hand = hands[0]
+                right_hand = hands[1]
 
-            #initializing right and left hands landmarks
+            # initializing right and left hands landmarks
             right_hand_lmList = right_hand["lmList"]
             left_hand_lmList = left_hand["lmList"]
 
-            #if hands are inside drawn limit boxes
-            if (square_x <= right_hand_lmList[8][0] <= square_x + square_size
-                                        and square_y <= right_hand_lmList[8][1] <= square_y + square_size
-                                        and square_x * 4 <= left_hand_lmList[8][0] <= square_x * 4 + square_size
-                                        and square_y <= left_hand_lmList[8][1] <= square_y + square_size):
+            # if hands are inside drawn limit boxes
+            if (square_x <= right_hand_lmList[9][0] <= square_x + square_size
+                    and square_y <= right_hand_lmList[9][1] <= square_y + square_size
+                    and square_x * 4 <= left_hand_lmList[9][0] <= square_x * 4 + square_size
+                    and square_y <= left_hand_lmList[9][1] <= square_y + square_size):
 
+                draw_hands = True  # Draw hands
 
-                draw_hands = True #Draw Hands
-
-                if Hands:
-                    myHand = Hands[0]
+                if hands:
+                    myHand = hands[0]
                     fingerList = detector.fingersUp(myHand)
                     lmList = myHand["lmList"]
 
@@ -80,7 +78,7 @@ def run_camera():
                     else:
                         fingerList.append(0)
 
-                    serial.sendData(fingerList) # send fingerdata to arduino
+                    serial.sendData(fingerList)  # send finger data to arduino
 
             else:
                 draw_hands = False
@@ -93,7 +91,6 @@ def run_camera():
 #  that we can run run_camera() once we press a button.
 if __name__ == '__main__':
     run_camera()
-
-# Release the camera and close OpenCV windows
-cap.release()
-cv2.destroyAllWindows()
+    # Release the camera and close OpenCV windows
+    cap.release()
+    cv2.destroyAllWindows()
