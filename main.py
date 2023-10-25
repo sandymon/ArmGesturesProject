@@ -7,7 +7,7 @@ import cvzone.SerialModule as srl
 cap = cv2.VideoCapture(0)
 
 detector = htm.HandDetector(detectionCon=0.7)
-serial = srl.SerialObject("COM6", 9600, 1)
+serial = srl.SerialObject("COM3", 9600, 1)
 
 square_size = 225
 square_x = 100
